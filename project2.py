@@ -84,34 +84,50 @@ Total **N**: 104
 
 **Methodology**:
 
-To determine the number of days in a 30-day month with varying weather conditions, we employ two key variables. The transitional matrix, represented as **P**, encapsulates the probabilities of transitioning from one weather condition to another, calculated by dividing the number of occurrences by the total of each specified weather condition. Additionally, the initial distribution, denoted as **D0**, reflects the initial proportions of normal (**N**), rainy (**R**), and snowy (**S**) days in a 30-day month period.
-  - **N** days: 7/30,
-  - **R** days: 7/30,
-  - and **S** days: 16/30.
-
-We initialize a variable, **D**, to the initial distribution **D0**. A loop is then executed 30 times,simulating the transitions over the course of a month. Within each iteration, the matrix multiplication operator '*@* ' is utilized to update **D** and represent the distribution of days after applying the transition probabilities defined in the transitional matrix **P**.
+To determine the number of days in a 30-day month with varying weather conditions, we employ two key variables. The transitional matrix, represented as **P**, encapsulates the probabilities of transitioning from one weather condition to another, calculated by dividing the number of occurrences by the total of each specified weather condition. To set up the matrix in the system of equations, the transpose of **P** is calculated and subtracted from the identity matrix **I** of the same dimension. For the sum constraint, a row of ones is added to ensure that the sum of the stationary distribution is equal to 1. The equation is then solved using the least-squares method.
 """
 
+# Libraries needed
 import numpy as np
+import sympy as sp
 
-# Transition matrix
-P = np.array([[0, 55/104, 49/104],
-              [57/204, 101/204, 46/204],
-              [47/191, 49/191, 95/191]], dtype=np.float64)
+# Define the transition matrix
+P = np.array([[0, 0.528846, 0.4711538],
+              [0.2794118, 0.495098, 0.2254902],
+              [0.2460733, 0.256545, 0.4973822]], dtype=np.float64)
 
-# Initial distribution based on the first 30 days of given 500
-D0 = np.array([7/30, 7/30, 16/30], dtype=np.float64)
+# Calculate the stationary distribution
+# We solve πP = π, which can be rewritten as π(P.T - I) = 0,
+# where I is the identity matrix
+# We add a constraint that the sum of π must be 1
 
-# Iterate 30 times to simulate 30 days
-D = D0
-for _ in range(30):
-    D = D @ P  # Matrix multiplication
+# Create the augmented matrix for the system
+n = P.shape[0]
+A = np.vstack((P.T - np.eye(n), np.ones(n)))
+b = np.zeros(n + 1)
+b[-1] = 1  # The sum of the probabilities should be 1
 
-print(D)
+# Solve the system using least squares
+solution = np.linalg.lstsq(A, b, rcond=None)[0]
+
+# The solution gives us the stationary distribution
+print("Stationary distribution:", solution)
 
 """**Results**:
 
-After calculating the resulting distribution, we add the outputs to verify if the result is 1. This verification ensures that the outputs are accurate. Once we've checked the summation of the outputs, we multiply each output by 30, representing the proposed 30-day month. This multiplication provides us with the number of nice (**N**), rain (**R**), and snow (**S**) days in the Land of Oz during a 30-day month.
+After obtaining the stationary distribution, the outputs are summed to verify if the result equals 1. This verification confirms the accuracy of the outputs. Once the summation is checked, each output is multiplied by 30, representing the proposed 30-day month. This multiplication provides us with the number of nice (**N**), rain (**R**), and snow (**S**) days in the Land of Oz during a 30-day month.
+
+0.2084879
+\+ 0.41147501 + 0.38003708 = **1**
+
+0.2084879 x 30 = **6.254638** = **N**ice
+
+0.41147501 x 30 = **12.344247** = **R**ain
+
+0.38003708 x 30 = **11.4011151** = **S**now
+
+
+TOTAL       30 days
 
 This script simulates the changing distribution of days throughout a month in the Land of Oz, leveraging a transitional matrix to model the probabilities of transitioning between different weather conditions. The resulting distribution, obtained after 30 iterations, provides valuable insights into the expected weather patterns based on the defined probabilities.
 """
