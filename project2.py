@@ -53,6 +53,7 @@ print(f"NS count: {count_NS}")
 # Libraries needed
 import numpy as np
 import sympy as sp
+import matplotlib.pyplot as plt
 
 # Define the transition matrix
 P = np.array([[0, 0.528846, 0.4711538],
